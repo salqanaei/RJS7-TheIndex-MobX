@@ -1,48 +1,32 @@
 import React, { Component } from "react";
-import axios from "axios";
+import { decorate, observable, computed } from "mobx";
+import { observer } from "mobx-react";
 
-// Components
 import BookTable from "./BookTable";
 import Loading from "./Loading";
-
-const instance = axios.create({
-  baseURL: "https://the-index-api.herokuapp.com"
-});
+import authorStore from "./stores/authorStore";
+import bookStore from "./stores/bookStore";
 
 class AuthorDetail extends Component {
-  state = {
-    author: null,
-    loading: true
-  };
-
   componentDidMount() {
-    this.getAuthor();
+    const authorID = this.props.match.params.authorID;
+    authorStore.getAuthor(authorID);
   }
 
   componentDidUpdate(prevProps) {
     if (prevProps.match.params.authorID !== this.props.match.params.authorID) {
-      this.getAuthor();
+      const authorID = this.props.match.params.authorID;
+      authorStore.getAuthor(authorID);
     }
   }
 
-  getAuthor = async () => {
-    const authorID = this.props.match.params.authorID;
-    this.setState({ loading: true });
-    try {
-      const res = await instance.get(`/api/authors/${authorID}`);
-      const author = res.data;
-      this.setState({ author: author, loading: false });
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   render() {
-    if (this.state.loading) {
+    if (authorStore.loadingAuthor) {
       return <Loading />;
     } else {
-      const author = this.state.author;
+      const author = authorStore.author;
       const authorName = `${author.first_name} ${author.last_name}`;
+      const books = author.books.map(book => bookStore.getBookById(book.id));
       return (
         <div className="author">
           <div>
@@ -53,11 +37,11 @@ class AuthorDetail extends Component {
               alt={authorName}
             />
           </div>
-          <BookTable books={author.books} />
+          <BookTable books={books} />
         </div>
       );
     }
   }
 }
 
-export default AuthorDetail;
+export default observer(AuthorDetail);

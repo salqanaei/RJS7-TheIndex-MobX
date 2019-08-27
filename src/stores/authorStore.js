@@ -12,6 +12,10 @@ class AuthorStore {
 
   query = "";
 
+  author = null;
+
+  loadingAuthor = true;
+
   fetchAuthors = async () => {
     try {
       const res = await instance.get("/api/authors/");
@@ -32,12 +36,25 @@ class AuthorStore {
   }
 
   getAuthorById = id => this.authors.find(author => +author.id === +id);
+
+  getAuthor = async id => {
+    try {
+      const res = await instance.get(`/api/authors/${id}`);
+      const author = res.data;
+      this.author = author;
+      this.loadingAuthor = false;
+    } catch (err) {
+      console.error(err);
+    }
+  };
 }
 
 decorate(AuthorStore, {
   authors: observable,
   loading: observable,
+  loadingAuthor: observable,
   query: observable,
+  author: observable,
   filteredAuthors: computed
 });
 

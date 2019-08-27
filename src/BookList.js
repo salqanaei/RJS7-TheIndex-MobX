@@ -1,57 +1,31 @@
 import React, { Component } from "react";
-import axios from "axios";
+import { observer } from "mobx-react";
 
 // Components
 import Loading from "./Loading";
 import SearchBar from "./SearchBar";
 import BookTable from "./BookTable";
-
-const instance = axios.create({
-  baseURL: "https://the-index-api.herokuapp.com"
-});
+import bookStore from "./stores/bookStore";
 
 class BookList extends Component {
-  state = {
-    books: [],
-    loading: true
-  };
-
-  async componentDidMount() {
-    try {
-      const res = await instance.get(
-        "https://the-index-api.herokuapp.com/api/books/"
-      );
-      const books = res.data;
-      this.setState({
-        books,
-        loading: false
-      });
-    } catch (err) {
-      console.error(err);
-    }
-  }
-
-  filterBooksByColor = bookColor =>
-    this.state.books.filter(book => book.color === bookColor);
-
   render() {
-    const bookColor = this.props.match.params.bookColor;
-    let books = this.state.books;
+    bookStore.bookColor = this.props.match.params.bookColor;
+    let books = bookStore.filteredBooks;
 
-    if (bookColor) {
-      books = this.filterBooksByColor(bookColor);
+    if (bookStore.bookColor) {
+      books = bookStore.filterBooksByColor;
     }
 
-    return this.state.loading ? (
+    return bookStore.loading ? (
       <Loading />
     ) : (
       <div>
         <h3>Books</h3>
-        <SearchBar store={{}} />
+        <SearchBar store={bookStore} />
         <BookTable books={books} />
       </div>
     );
   }
 }
 
-export default BookList;
+export default observer(BookList);
